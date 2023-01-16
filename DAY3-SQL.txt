@@ -1,0 +1,267 @@
+USE DEMO;
+GO
+CREATE TABLE ConstraintDemo1
+(
+       ID INT NOT NULL,
+   Name VARCHAR(50) NULL
+)
+
+
+INSERT INTO ConstraintDemo1 ([ID],[NAME]) VALUES (1,'Ali')
+GO
+INSERT INTO ConstraintDemo1 ([ID]) VALUES (3)
+GO
+INSERT INTO ConstraintDemo1 ([NAME]) VALUES ('Fadi')
+GO
+
+SELECT * FROM ConstraintDemo1
+
+ALTER TABLE ConstraintDemo1 ALTER COLUMN Name VARCHAR(50) NOT NULL;
+
+UPDATE ConstraintDemo1 SET [Name]='' WHERE [Name] IS NULL;
+
+--UNIQUE:
+
+
+CREATE TABLE ConstraintDemo2
+(
+     ID INT UNIQUE,
+   Name VARCHAR(50) NULL
+)
+ 
+INSERT INTO ConstraintDemo2 ([ID],[NAME]) VALUES (1,'Ali')
+GO
+INSERT INTO ConstraintDemo2 ([ID],[NAME]) VALUES (2,'Ali')
+GO
+INSERT INTO ConstraintDemo2 ([ID],[NAME]) VALUES (NULL,'Adel33')
+GO
+INSERT INTO ConstraintDemo2 ([ID],[NAME]) VALUES (1,'Faris')
+GO
+
+SELECT * FROM ConstraintDemo2
+
+SELECT CONSTRAINT_NAME,
+     TABLE_SCHEMA ,
+     TABLE_NAME,
+     CONSTRAINT_TYPE
+     FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+   WHERE TABLE_NAME='ConstraintDemo3';
+
+
+--PRIMARY KEY:
+   CREATE TABLE ConstraintDemo3
+(
+     ID INT PRIMARY KEY,
+   Name VARCHAR(50)
+
+)
+
+INSERT INTO ConstraintDemo3 ([ID],[NAME]) VALUES (1,'John')
+GO
+INSERT INTO ConstraintDemo3 ([NAME]) VALUES ('Fadi')
+GO
+INSERT INTO ConstraintDemo3 ([ID],[NAME]) VALUES (1,'Saeed')
+GO
+
+SELECT * FROM ConstraintDemo3
+
+CREATE TABLE ConstraintDemoParent
+(
+       ID INT PRIMARY KEY,
+	 Name VARCHAR(50) 
+)
+
+CREATE TABLE ConstraintDemoChild
+(
+        CID INT PRIMARY KEY,
+	 ID INT FOREIGN KEY REFERENCES ConstraintDemoParent(ID)
+)
+
+
+INSERT INTO ConstraintDemoParent ([ID],[NAME]) VALUES (1,'John'),(2,'Mika'),(3,'Sanya')
+GO
+INSERT INTO ConstraintDemoChild (CID,ID) VALUES (1,1)
+GO
+INSERT INTO ConstraintDemoChild (CID,ID) VALUES (2,5)
+
+SELECT * FROM  ConstraintDemoParent
+
+SELECT * FROM  ConstraintDemoChild
+
+
+CREATE TABLE ConstraintDemo4
+(
+     ID INT PRIMARY KEY,
+	    Name VARCHAR(50) NULL,
+	    Salary INT CHECK (Salary=0)
+)
+
+INSERT INTO ConstraintDemo4 ([ID],[NAME],Salary) VALUES (4,'John',350)
+GO
+INSERT INTO ConstraintDemo4 ([ID],[NAME],Salary) VALUES (2,'Mike',0)
+GO
+INSERT INTO ConstraintDemo4 ([ID],[NAME],Salary) VALUES (3,'Nikola',-72)
+
+ALTER TABLE ConstraintDemo4
+DROP CONSTRAINT  CK__Constrain__Salar__31EC6D26;
+
+
+SELECT * FROM ConstraintDemo5
+
+DBCC CHECKCONSTRAINTS(ConstraintDemo4)
+
+
+CREATE TABLE ConstraintDemo5
+(
+        ID INT PRIMARY KEY,
+	    Name VARCHAR(50) NULL,
+	    EmployeeDate DATETIME NOT NULL DEFAULT GETDATE()
+)
+
+
+INSERT INTO ConstraintDemo5 ([ID],[NAME],EmployeeDate) VALUES (1,'Lorance','2016/10/22')
+GO
+INSERT INTO ConstraintDemo5 ([ID],[NAME]) VALUES (2,'Shady')
+GO
+
+--YYYY-MM-DD HH:mm:ss.SSS
+
+	-- Table: city
+CREATE TABLE city (
+    id int  NOT NULL IDENTITY(1, 1),
+    city_name char(128)  NOT NULL,
+    lat decimal(9,6)  NOT NULL,
+    long decimal(9,6)  NOT NULL,
+    country_id int  NOT NULL,
+    CONSTRAINT city_pk PRIMARY KEY  (id)
+);
+
+drop table city
+INSERT INTO city (city_name, lat, long, country_id) VALUES ('Berlin', 52.520008, 13.404954, 1);
+INSERT INTO city (city_name, lat, long, country_id) VALUES ('Belgrade', 44.787197, 20.457273, 2);
+INSERT INTO city (city_name, lat, long, country_id) VALUES ('Zagreb', 45.815399, 15.966568, 3);
+INSERT INTO city (city_name, lat, long, country_id) VALUES ('New York', 40.73061, -73.935242, 4);
+INSERT INTO city (city_name, lat, long, country_id) VALUES ('Los Angeles', 34.052235, -118.243683, 4);
+INSERT INTO city (city_name, lat, long, country_id) VALUES ('Warsaw', 52.237049, 21.017532, 5);
+
+select * from country
+select * from city
+
+CREATE TABLE country (
+    id int  NOT NULL IDENTITY(1, 1),
+    country_name char(128)  NOT NULL,
+    country_name_eng char(128)  NOT NULL,
+    country_code char(8)  NOT NULL,
+    CONSTRAINT country_ak_1 UNIQUE (country_name),
+    CONSTRAINT country_ak_2 UNIQUE (country_name_eng),
+    CONSTRAINT country_ak_3 UNIQUE (country_code),
+    CONSTRAINT country_pk PRIMARY KEY  (id)
+);
+
+INSERT INTO country (country_name, country_name_eng, country_code) VALUES ('Deutschland', 'Germany', 'DEU');
+INSERT INTO country (country_name, country_name_eng, country_code) VALUES ('Srbija', 'Serbia', 'SRB');
+INSERT INTO country (country_name, country_name_eng, country_code) VALUES ('Hrvatska', 'Croatia', 'HRV');
+INSERT INTO country (country_name, country_name_eng, country_code) VALUES ('United Stated of America', 'United Stated of America', 'USA');
+INSERT INTO country (country_name, country_name_eng, country_code) VALUES ('Polska', 'Poland', 'POL');
+
+
+ALTER TABLE city ADD CONSTRAINT city_country
+    FOREIGN KEY (country_id)
+    REFERENCES country (id);
+
+SELECT 
+    INFORMATION_SCHEMA.TABLES.TABLE_NAME,
+    INFORMATION_SCHEMA.TABLE_CONSTRAINTS.CONSTRAINT_NAME,
+    INFORMATION_SCHEMA.TABLE_CONSTRAINTS.CONSTRAINT_TYPE
+FROM INFORMATION_SCHEMA.TABLES
+INNER JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS ON INFORMATION_SCHEMA.TABLES.TABLE_NAME = INFORMATION_SCHEMA.TABLE_CONSTRAINTS.TABLE_NAME
+ORDER BY
+    INFORMATION_SCHEMA.TABLES.TABLE_NAME ASC,
+    INFORMATION_SCHEMA.TABLE_CONSTRAINTS.CONSTRAINT_TYPE DESC;
+
+	USE test_database;
+ 
+-- join tables and constraints data
+SELECT 
+    INFORMATION_SCHEMA.TABLES.TABLE_NAME,
+    SUM(CASE WHEN INFORMATION_SCHEMA.TABLE_CONSTRAINTS.CONSTRAINT_TYPE = 'PRIMARY KEY' THEN 1 ELSE 0 END) AS pk,
+    SUM(CASE WHEN INFORMATION_SCHEMA.TABLE_CONSTRAINTS.CONSTRAINT_TYPE = 'UNIQUE' THEN 1 ELSE 0 END) AS uni,
+    SUM(CASE WHEN INFORMATION_SCHEMA.TABLE_CONSTRAINTS.CONSTRAINT_TYPE = 'FOREIGN KEY' THEN 1 ELSE 0 END) AS fk
+FROM INFORMATION_SCHEMA.TABLES
+LEFT JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS ON INFORMATION_SCHEMA.TABLES.TABLE_NAME = INFORMATION_SCHEMA.TABLE_CONSTRAINTS.TABLE_NAME
+GROUP BY
+    INFORMATION_SCHEMA.TABLES.TABLE_NAME
+ORDER BY
+    INFORMATION_SCHEMA.TABLES.TABLE_NAME ASC;
+
+
+
+	select * from city where city_name IN ('Berlin','New York') HAVING ID>1 GROUP BY COUNTRY_ID  ORDER BY ASC; -- Incorrect
+
+	select * from city where city_name IN ('Berlin','New York') GROUP BY <COUNTRY_ID> HAVING <ID>1>  ORDER BY ASC;  -- correct query
+
+	select distinct country_id from city;
+
+	select country_id,count(*) as cnt_id from city group by country_id having count(country_id) = 1;
+
+	select country_id,count(*) as cnt_id from city group by country_id having count(country_id) > 0  order by cnt_id asc ;
+
+	select country_id,count(*) as cnt_id from city group by country_id having count(country_id) > 0  order by country_id desc ;
+
+
+	select country_id from city where country_id=country_id;
+
+
+	select * from city;
+
+	select * from city where city_name not IN ('Berlin','New York')
+
+	select * from city where country_id between 2 and 4;
+
+	select * from city where country_id % 2 =1;
+	select * from city where country_id < 3;
+	select * from city where country_id <= 3;
+	select * from city where country_id <> 3;
+	select * from city where country_id != 3;
+
+
+	select * from city where long < 3;
+
+	select * from city where city_name like 'Berlin';
+
+	select * from city where city_name like 'Ber%';
+	select * from city where city_name like '%Be%';
+	select * from city where city_name like '%e%';
+	select * from city where city_name like '^Be%';
+	select * from city where city_name like '%n'
+
+	select * from city where city_name like 'Berli_';
+	select * from city where city_name like 'Berli_%';
+
+	select count(id) from city;
+
+	select max(lat) as lat from city;
+	
+	select min(lat) as lat from city;
+
+	select sum(lat) as lat from city;
+
+	select avg(lat) as lat from city;
+
+
+	select * into city_dup from city;
+
+	select id,city_name into city3 from  
+	
+	INSERT INTO city_dup2 (id, city_name) select (id,city_name) from city;
+
+
+
+	select * from city where city_name like 'Berli_%';
+
+
+
+
+
+
+
